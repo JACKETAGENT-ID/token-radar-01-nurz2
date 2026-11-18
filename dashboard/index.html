@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Token Radar v2 — pre-token protocols ranked by implied value</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <div class="mark">◉</div>
+    <div>
+      <h1>TOKEN RADAR <span class="v2">v2 · strict-value model</span></h1>
+      <p class="sub">Which protocol without a token yet is worth farming next — and what exactly to do about it.</p>
+    </div>
+  </div>
+  <div class="topstats" id="topstats"></div>
+</header>
+
+<nav class="tabs" aria-label="Views">
+  <button class="tab active" data-view="board" type="button">Board</button>
+  <button class="tab" data-view="live" type="button">Live tokens · market comparison</button>
+  <button class="tab" data-view="method" type="button">Methodology</button>
+</nav>
+
+<section id="view-board" class="view">
+  <div class="controls">
+    <label>Search <input id="q" type="search" placeholder="name or slug…" autocomplete="off"></label>
+    <label>Category <select id="cat"><option value="">All categories</option></select></label>
+    <label>Chain <select id="chain"><option value="">All chains</option></select></label>
+    <label>Scope <select id="scope">
+      <option value="all">All 198 pre-token</option>
+      <option value="watchlist">Watchlist only (40)</option>
+      <option value="early">Early · below the $50M floor</option>
+      <option value="high">High confidence only</option>
+    </select></label>
+    <label>Sort by <select id="sort">
+      <option value="implied">Implied value ↓</option>
+      <option value="tvl">TVL ↓</option>
+      <option value="growth">7-day growth ↓</option>
+      <option value="age">Age ↓</option>
+      <option value="pertvl">Implied per $ TVL ↓</option>
+    </select></label>
+  </div>
+  <p class="count" id="count"></p>
+  <div class="tablewrap">
+    <table id="board">
+      <thead><tr>
+        <th>#</th><th>Protocol</th><th>Category</th><th>Chains</th>
+        <th class="num">TVL</th><th class="num">7d</th><th class="num">Age</th>
+        <th class="num">Implied value</th><th class="num">$/TVL</th><th>Confidence</th>
+      </tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+  <p class="hint">Click any row for its full detail: every multiplier, the exact arithmetic, and its 7-step farm plan with cost and time.</p>
+  <section id="detail" class="detail" hidden></section>
+</section>
+
+<section id="view-live" class="view" hidden>
+  <h2>Already trading — the market's own values, not a model</h2>
+  <p class="note">These protocols <strong>record a token</strong>, so they are <strong>not ranked</strong> and not farm targets for a launch. They are shown only as a comparison: what the market actually pays for a token once it exists. A pre-token protocol's implied value is this entry's own claim, never the market's.</p>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>#</th><th>Protocol</th><th>Category</th><th class="num">TVL</th><th class="num">Market cap</th><th class="num">7d</th></tr></thead>
+      <tbody id="liverows"></tbody>
+    </table>
+  </div>
+</section>
+
+<section id="view-method" class="view" hidden>
+  <h2>Methodology — the whole model, nothing hidden</h2>
+  <p class="note">Implied value follows only from the snapshot's own figures. No protocol name is special-cased; the same formula scores every row.</p>
+  <pre class="formula">implied = TVL × categoryMultiple × chainMult × growthMult × maturityMult
+
+chainMult    = 1 + 0.02 × min(chains − 1, 10)            → 1.00 – 1.20
+growthMult   = 1 + clamp(change_7d, −50, +80) / 100 × 0.7
+               (change_7d missing counts as 0 — no growth claimed)
+maturityMult = age unknown → 0.85
+               else 0.70 + 0.30 × min(age_days, 1095) / 1095 → 0.70 – 1.00</pre>
+  <table class="bands">
+    <thead><tr><th>Band</th><th>Multiple</th><th>Categories</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td><span class="band high">HIGH</span></td><td>0.32</td><td>Dexs, Derivatives, Prediction Market</td><td>Fee-earning venues: TVL turns into trading revenue a token can capture.</td></tr>
+      <tr><td><span class="band midhigh">MID-HIGH</span></td><td>0.28</td><td>Lending, CDP, Payments, Collateral Markets</td><td>Sticky deposits with real borrowing demand.</td></tr>
+      <tr><td><span class="band mid">MID</span></td><td>0.25</td><td>Yield, Yield Aggregator, RWA, Basis Trading, Risk Curators, Onchain Capital Allocator, Leveraged Farming, Liquidity Manager, Farm, Options Vault, Interest Rate Derivatives, CDP Manager, Uncollateralized Lending</td><td>Vaults and yield products: TVL is productive but fee-thin.</td></tr>
+      <tr><td><span class="band low">LOW</span></td><td>0.22</td><td>Staking Pool, Restaking, Insurance, Privacy, Indexes, Governance Incentives, OTC Marketplace, CeDeFi, Dual-Token Stablecoin, Stablecoin Wrapper, Decentralized BTC, Anchor BTC</td><td>Narrower fee base or a token that would split value with an existing asset.</td></tr>
+      <tr><td><span class="band floor">FLOOR</span></td><td>0.18</td><td>Chain, Bridge, Canonical Bridge, Cross Chain Bridge, Liquid Staking, Liquid Restaking, Restaked BTC, CEX, Crypto Card Issuer</td><td>TVL passes through or is a wrapped copy of value that already trades.</td></tr>
+      <tr><td><span class="band unknown">UNKNOWN</span></td><td>0.20</td><td>No category recorded</td><td>Neutral: neither rewarded nor punished for a missing label.</td></tr>
+    </tbody>
+  </table>
+  <h3>How to read the board</h3>
+  <ul class="read">
+    <li><strong>Watchlist (40)</strong> — the snapshot's own floor: TVL ≥ $50M, records no token, not a wrapped, staked or bridged product of one that trades. The board ranks all 40, plus 138 early protocols below the floor.</li>
+    <li><strong>“Records no token”</strong> — the snapshot is DefiLlama's record, not proof. A protocol on the list may still have a token its record does not carry.</li>
+    <li><strong>Confidence</strong> — high: tracked ≥ 1 year, 7-day change reported, on ≥ 3 chains. Medium: tracked ≥ 120 days. Early: anything younger or thinner.</li>
+    <li><strong>Farm plan</strong> — 7 steps per protocol, each with a cost and a time. Capital follows the TVL tier ($50–$200); hold length follows age (30–75 days). Never pay a fee to claim.</li>
+  </ul>
+  <p class="src" id="src"></p>
+</section>
+
+<footer>
+  <p>Token Radar v2 · model <strong>radar-2-strict</strong> · Data: DefiLlama snapshot, sealed <span id="asof"></span> · Implied values are this entry's own claim, not a prediction that a token will launch, nor when.</p>
+</footer>
+<script src="../data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
